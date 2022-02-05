@@ -327,7 +327,7 @@ function App() {
 
 export default App;
 
-const viewportHeight = 100;
+const viewportHeight = 40;
 
 const Container = styled.div`
   margin-left: 312px;
@@ -374,32 +374,33 @@ const TrackName = styled.div`
 
 const Channel = styled.div`
   font-family: "Courier New", Courier, monospace;
-  font-size: ${(p) => (p.isMidi ? "18px" : "32px")};
+  font-size: ${(p) => (p.isMidi ? "18px" : "30px")};
   letter-spacing: 2px;
   z-index: 4;
-  margin-top: 6px;
+  margin-top: 2px;
   background: ${(p) => (p.isSoloed ? "#1b37fd" : "none")};
   color: ${(p) => (p.isArmed ? "red" : "white")};
   font-weight: ${(p) => (p.isArmed ? "bold" : "normal")};
   text-shadow: ${(p) => (p.isArmed ? "0 0 16px #e05a5a;" : "0 0 12px #000;")};
   > div {
     position: absolute;
-    bottom: 0;
-    font-size: 22px;
+    bottom: 2px;
+    font-size: 18px;
     display: flex;
     flex-direction: row;
     padding: 4px;
     justify-content: space-around;
-    border-top: 1px solid grey;
     z-index: 0;
     width: 100%;
+    color: white;
+    font-weight: bold;
     :after {
       content: "";
-      width: 2px;
-      height: 110%;
+      width: 40px;
+      height: 2px;
       position: absolute;
+      margin-top: 8px;
       background-color: #c0bfbf;
-      top: -2%;
     }
   }
 `;
