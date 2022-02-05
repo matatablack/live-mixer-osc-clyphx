@@ -9,54 +9,61 @@ const client = new W3CWebSocket("ws://localhost:8000");
 const fadersInitialState = {
   FADER_1: {
     channel: "1/2",
+    index: "1",
     track_name: "None",
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
   FADER_3: {
     channel: "3/4",
+    index: "2",
     track_name: "None",
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
   FADER_5: {
     channel: "5/6",
+    index: "3",
     track_name: "None",
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
   FADER_7: {
     channel: "7/8",
+    index: "4",
     track_name: "None",
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
   FADER_9: {
     channel: "9/10",
+    index: "5",
     track_name: "None",
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
   FADER_11: {
     channel: "11/12",
+    index: "6",
     track_name: "None",
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
   FADER_13: {
     channel: "13/14",
+    index: "7",
     track_name: "None",
     track_color: "",
     value: "",
@@ -66,11 +73,12 @@ const fadersInitialState = {
   },
   FADER_15: {
     channel: "15/16",
+    index: "8",
     track_name: "None",
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
   FADER_MIDI_1: {
     channel: "MIDI 1",
@@ -78,7 +86,7 @@ const fadersInitialState = {
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
   FADER_MIDI_2: {
     channel: "MIDI 2",
@@ -86,7 +94,7 @@ const fadersInitialState = {
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
   FADER_MIDI_3: {
     channel: "MIDI 3",
@@ -94,7 +102,7 @@ const fadersInitialState = {
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
   FADER_MIDI_4: {
     channel: "MIDI 4",
@@ -102,7 +110,7 @@ const fadersInitialState = {
     track_color: "",
     value: "",
     int: "",
-    parameter_name: ""
+    parameter_name: "",
   },
 };
 
@@ -255,19 +263,23 @@ function App() {
   return (
     <Container>
       {Object.entries(faders).map(
-        ([control, { channel, track_name, track_color, track_arm, int }]) => {
+        ([control, { channel, track_name, track_color, index, int }]) => {
           const isAssigned = track_name !== "None";
           const trackColor = toColor(track_color);
           const isMidi = channel.startsWith("MIDI");
-          const isArmed = armedTracksByFader[control]
-          const isSoloed = soloTracksByFader[control]
+          const isArmed = armedTracksByFader[control];
+          const isSoloed = soloTracksByFader[control];
           return (
             <Strip key={channel} isMidi={isMidi} volume={int}>
               <TrackName assigned={isAssigned} isMidi={isMidi} bg={trackColor}>
                 {track_name.split("[->")[0]}
               </TrackName>
               <Channel isMidi={isMidi} isArmed={isArmed} isSoloed={isSoloed}>
-                {isMidi ? "" : channel}
+                {isMidi ? "" : index}
+                <div>
+                  <span>{channel.split("/")[0]}</span>
+                  <span>{channel.split("/")[1]}</span>
+                </div>
               </Channel>
             </Strip>
           );
@@ -276,15 +288,7 @@ function App() {
       <KnobsContainer firstRow>
         {knobsFirstRow.map(
           (
-            [
-              control,
-              {
-                track_name,
-                parameter_name,
-                int,
-                fader_midi,
-              },
-            ],
+            [control, { track_name, parameter_name, int, fader_midi }],
             index
           ) => {
             const isAssigned =
@@ -302,15 +306,7 @@ function App() {
       <KnobsContainer>
         {knobsOtherRows.map(
           (
-            [
-              control,
-              {
-                track_name,
-                parameter_name,
-                int,
-                fader_midi,
-              },
-            ],
+            [control, { track_name, parameter_name, int, fader_midi }],
             index
           ) => {
             const isAssigned =
@@ -331,7 +327,7 @@ function App() {
 
 export default App;
 
-const viewportHeight = 24;
+const viewportHeight = 100;
 
 const Container = styled.div`
   margin-left: 312px;
@@ -351,6 +347,7 @@ const Strip = styled.div`
   background-color: black;
   border: 1px solid grey;
   text-align: center;
+  position: relative;
   &:after {
     /* top: ${(p) => (p.isMidi ? "24px" : "38px")}; */
     top: 100%;
@@ -377,13 +374,34 @@ const TrackName = styled.div`
 
 const Channel = styled.div`
   font-family: "Courier New", Courier, monospace;
-  font-size: ${(p) => (p.isMidi ? "18px" : "28px")};
+  font-size: ${(p) => (p.isMidi ? "18px" : "32px")};
   letter-spacing: 2px;
   z-index: 4;
+  margin-top: 6px;
   background: ${(p) => (p.isSoloed ? "#1b37fd" : "none")};
   color: ${(p) => (p.isArmed ? "red" : "white")};
   font-weight: ${(p) => (p.isArmed ? "bold" : "normal")};
   text-shadow: ${(p) => (p.isArmed ? "0 0 16px #e05a5a;" : "0 0 12px #000;")};
+  > div {
+    position: absolute;
+    bottom: 0;
+    font-size: 22px;
+    display: flex;
+    flex-direction: row;
+    padding: 4px;
+    justify-content: space-around;
+    border-top: 1px solid grey;
+    z-index: 0;
+    width: 100%;
+    :after {
+      content: "";
+      width: 2px;
+      height: 110%;
+      position: absolute;
+      background-color: #c0bfbf;
+      top: -2%;
+    }
+  }
 `;
 
 const KnobsContainer = styled.div`
