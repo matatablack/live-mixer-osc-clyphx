@@ -327,7 +327,7 @@ function App() {
 
 export default App;
 
-const viewportHeight = 40;
+const viewportHeight = 100;
 
 const Container = styled.div`
   margin-left: 312px;
