@@ -342,7 +342,7 @@ function App() {
 
 export default App;
 
-const viewportHeight = 33.8;
+const viewportHeight =  100; //33.8;
 
 const StatusContainer = styled.div`
   width: 304px;
