@@ -326,10 +326,11 @@ function App() {
             const isAssigned =
               fader_midi !== "FADER_MIDI_4" &&
               faders[fader_midi]?.track_name !== "None";
+            const isLast = control === 'KNOB_12'
             return (
               <span key={control}>
                 <Knob value={int} />
-                <span>{isAssigned ? parameter_name : track_name}</span>
+                <span>{isAssigned ? parameter_name : isLast ? parameter_name : track_name}</span>
               </span>
             );
           }
