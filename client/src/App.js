@@ -148,7 +148,7 @@ const knobsInitialState = {
     fader_midi: "FADER_MIDI_4",
   },
   KNOB_5: {
-    track_name: "[MUSIC/KEYS]",
+    track_name: "[MUSIC]",
     track_color: "",
     value: "",
     int: "",
@@ -180,7 +180,7 @@ const knobsInitialState = {
     fader_midi: "FADER_MIDI_4",
   },
   KNOB_9: {
-    track_name: "[ALIENS/GTR]",
+    track_name: "[ALIENS]",
     track_color: "",
     value: "",
     int: "",
@@ -216,10 +216,25 @@ const knobsInitialState = {
 const armedTracksByFader = {};
 const soloTracksByFader = {};
 
+let lastStatusMessage = "";
+
 function App() {
   const [faders, setFaders] = React.useState(fadersInitialState);
 
   const [knobs, setKnobs] = React.useState(knobsInitialState);
+
+  const [statusMessage, setStatusMessage] = React.useState("---");
+
+  const [lastAction, setLastAction] = React.useState("---");
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setStatusMessage("---");
+    }, 2000);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [statusMessage]);
 
   useEffect(() => {
     client.onopen = () => {
@@ -227,18 +242,22 @@ function App() {
     };
     client.onmessage = (message) => {
       const msg = JSON.parse(message.data);
-      // if(msg.type === "track_arm" && msg.control === "FADER_1" || msg.control.includes("lp")) console.log(msg)
+      // if(msg.type === "msg" || msg.control.includes("global")) console.log(msg)
       const { type, control, value } = msg;
 
+      // ARM
       if (type === "value" && control.includes("lp_arm_")) {
         armedTracksByFader["FADER_" + control.split("lp_arm_")[1]] =
           value === "True" ? true : false;
       }
+
+      // SOLO
       if (type === "value" && control.includes("lp_solo_")) {
         soloTracksByFader["FADER_" + control.split("lp_solo_")[1]] =
           value === "True" ? true : false;
       }
 
+      // FADER
       if (faders[control]) {
         setFaders((faders) => ({
           ...faders,
@@ -246,6 +265,7 @@ function App() {
         }));
       }
 
+      // KNOB
       if (knobs[control]) {
         //  console.log("Message received", msg);
         setKnobs((knobs) => ({
@@ -253,15 +273,27 @@ function App() {
           [control]: { ...knobs[control], [type]: value },
         }));
       }
+
+      // MESSAGE
+      if (type === "msg") {
+        if (value === lastStatusMessage) return;
+        lastStatusMessage = value;
+        setStatusMessage(value);
+      }
+      if (type === "action") {
+        setLastAction(value);
+      }
     };
   }, []);
 
   const knobsList = Object.entries(knobs);
-  const knobsFirstRow = knobsList.slice(0, 4);
-  const knobsOtherRows = knobsList.slice(-8);
 
   return (
     <Container>
+      <StatusContainer>
+        <StatusMessage>{statusMessage}</StatusMessage>
+        <LastAction>{lastAction}</LastAction>
+      </StatusContainer>
       {Object.entries(faders).map(
         ([control, { channel, track_name, track_color, index, int }]) => {
           const isAssigned = track_name !== "None";
@@ -285,26 +317,8 @@ function App() {
           );
         }
       )}
-      <KnobsContainer firstRow>
-        {knobsFirstRow.map(
-          (
-            [control, { track_name, parameter_name, int, fader_midi }],
-            index
-          ) => {
-            const isAssigned =
-              fader_midi !== "FADER_MIDI_4" &&
-              faders[fader_midi]?.track_name !== "None";
-            return (
-              <span key={control}>
-                <Knob value={int} />
-                {isAssigned ? parameter_name : track_name}
-              </span>
-            );
-          }
-        )}
-      </KnobsContainer>
       <KnobsContainer>
-        {knobsOtherRows.map(
+        {knobsList.map(
           (
             [control, { track_name, parameter_name, int, fader_midi }],
             index
@@ -315,7 +329,7 @@ function App() {
             return (
               <span key={control}>
                 <Knob value={int} />
-                {isAssigned ? parameter_name : track_name}
+                <span>{isAssigned ? parameter_name : track_name}</span>
               </span>
             );
           }
@@ -327,10 +341,50 @@ function App() {
 
 export default App;
 
-const viewportHeight = 100;
+const viewportHeight = 33.8;
+
+const StatusContainer = styled.div`
+  width: 304px;
+  padding: 12px;
+  padding-bottom: 0;
+  box-sizing: border-box;
+  color: #d94c18;
+  font-family: "Courier New", Courier, monospace;
+  display: flex;
+  flex-direction: column;
+`;
+const StatusMessage = styled.div`
+  font-size: 20px;
+  font-weight: 600;
+  font-family: "Courier New", Courier, monospace;
+  text-align: center;
+  flex-grow: 3;
+  text-overflow: ellipsis;
+  /* line-break: anywhere; */
+  max-height: 40px;
+  overflow: hidden;
+`;
+const LastAction = styled.div`
+  font-size: 16px;
+  font-family: "Courier New", Courier, monospace;
+  color: #e9e96a;
+  flex-grow: 1;
+  border-top: 1px solid #e9e96a;
+  padding-top: 5px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  :before {
+    content: "Last:";
+    width: 60px;
+    /* font-weight: bold; */
+    font-size: 15px;
+    display: inline-block;
+    overflow: hidden;
+  }
+`;
 
 const Container = styled.div`
-  margin-left: 312px;
   display: flex;
   flex-direction: row;
   width: 100%;
@@ -383,10 +437,10 @@ const Channel = styled.div`
   font-weight: ${(p) => (p.isArmed ? "bold" : "normal")};
   text-shadow: ${(p) => (p.isArmed ? "0 0 16px #e05a5a;" : "0 0 12px #000;")};
   > div {
+    display: flex;
     position: absolute;
     bottom: 2px;
     font-size: 18px;
-    display: flex;
     flex-direction: row;
     padding: 4px;
     justify-content: space-around;
@@ -396,6 +450,7 @@ const Channel = styled.div`
     font-weight: bold;
     :after {
       content: "";
+      display: ${(p) => (p.isMidi ? "none" : "block")};
       width: 40px;
       height: 2px;
       position: absolute;
@@ -406,28 +461,31 @@ const Channel = styled.div`
 `;
 
 const KnobsContainer = styled.div`
-  top: ${(p) => (p.firstRow ? "40px" : "4px")};
-  left: ${(p) =>
-    p.firstRow ? "calc(218px*8 + 20px);" : "calc(218px*8 + 20px + 110px*4);"};
-  width: 440px;
+  width: 560px;
   height: 100%;
-  position: absolute;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: ${(p) => (p.firstRow ? ".5fr" : "1fr")};
-  grid-gap: 0px;
+  grid-template-columns: 1fr 0.7fr 1.1fr 1fr;
+  grid-template-rows: 0.5fr;
+  grid-gap: 2px;
+  height: 100px;
+  align-items: center;
+  margin-left: 16px;
+  padding-top: 2px;
 
   > span {
-    color: white;
     z-index: 4;
-    text-shadow: 0 0 12px #000;
     display: flex;
-    font-size: 10px;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-direction: row;
-    padding-bottom: 20px;
+    height: 28px;
+    > span {
+      color: #bbbbbb;
+      text-shadow: 0 0 12px #000;
+      font-size: 16px;
+      line-height: 1.5;
+    }
   }
 `;
 

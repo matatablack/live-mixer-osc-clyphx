@@ -16,12 +16,14 @@ oscServer.on('listening', () => {
 
 setInterval(() => {
   console.log('clyphx -> ', lastMessage)
-}, 1000)
+}, 2000)
 
 const filter = [/* 'FADER_11' */]
 oscServer.on('message', (clyphxMsg) => {
   let message = String(clyphxMsg)
   lastMessage = message
+
+  // if (message.includes('msg')) console.log(message)
   
   // if(!filter.length === 0 && filter.some(str => message.includes(str))) { 
   // if(!filter.length === 0 && filter.some(str => message.includes(str))) { 
