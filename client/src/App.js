@@ -82,6 +82,7 @@ const fadersInitialState = {
   },
   FADER_MIDI_1: {
     channel: "MIDI 1",
+    index: "1",
     track_name: "None",
     track_color: "",
     value: "",
@@ -90,6 +91,7 @@ const fadersInitialState = {
   },
   FADER_MIDI_2: {
     channel: "MIDI 2",
+    index: "2",
     track_name: "None",
     track_color: "",
     value: "",
@@ -98,6 +100,7 @@ const fadersInitialState = {
   },
   FADER_MIDI_3: {
     channel: "MIDI 3",
+    index: "3",
     track_name: "None",
     track_color: "",
     value: "",
@@ -106,6 +109,7 @@ const fadersInitialState = {
   },
   FADER_MIDI_4: {
     channel: "MIDI 4",
+    index: "4",
     track_name: "None",
     track_color: "",
     value: "",
@@ -215,6 +219,7 @@ const knobsInitialState = {
 
 const armedTracksByFader = {};
 const soloTracksByFader = {};
+const mutedTracksByFader = {};
 
 let lastStatusMessage = "";
 
@@ -245,16 +250,23 @@ function App() {
       // if(msg.type === "msg" || msg.control.includes("global")) console.log(msg)
       const { type, control, value } = msg;
 
+      // if(type==="value") console.log(control, value)
+
       // ARM
       if (type === "value" && control.includes("lp_arm_")) {
-        armedTracksByFader["FADER_" + control.split("lp_arm_")[1]] =
+        armedTracksByFader["FADER_" + control?.split("lp_arm_")[1]] =
           value === "True" ? true : false;
       }
 
       // SOLO
       if (type === "value" && control.includes("lp_solo_")) {
-        soloTracksByFader["FADER_" + control.split("lp_solo_")[1]] =
+        soloTracksByFader["FADER_" + control?.split("lp_solo_")[1]] =
           value === "True" ? true : false;
+      }
+
+      // MUTE
+      if (type === "value" &&  control?.includes("lp_track_mute_")) {
+        mutedTracksByFader["FADER_" + control?.split("lp_track_mute_")[1]] = value === "True" ? true : false;
       }
 
       // FADER
@@ -286,6 +298,15 @@ function App() {
     };
   }, []);
 
+/*   useEffect(() => {
+    const x = setInterval(() => {
+      console.log('mutedTracksByFader', mutedTracksByFader)
+      console.log('armedTracksByFader', armedTracksByFader)
+      console.log('solo', soloTracksByFader)
+    }, 3000)
+    return () => clearInterval(x)
+  }, []) */
+
   const knobsList = Object.entries(knobs);
 
   return (
@@ -295,24 +316,28 @@ function App() {
         <LastAction>{lastAction}</LastAction>
       </StatusContainer>
       {Object.entries(faders).map(
-        ([control, { channel, track_name, track_color, index, int }]) => {
+        ([control, { channel, track_name, track_color, index, int, value }]) => {
           const isAssigned = track_name !== "None";
           const trackColor = toColor(track_color);
           const isMidi = channel.startsWith("MIDI");
           const isArmed = armedTracksByFader[control];
           const isSoloed = soloTracksByFader[control];
+          const isMuted = mutedTracksByFader[control];
           return (
-            <Strip key={channel} isMidi={isMidi} volume={int}>
+            <Strip key={channel} isMidi={isMidi} volume={int} isMuted={isMuted}>
               <TrackName assigned={isAssigned} isMidi={isMidi} bg={trackColor}>
-                {track_name.split("[->")[0]}
+                {track_name?.split("[->")[0]}
               </TrackName>
-              <Channel isMidi={isMidi} isArmed={isArmed} isSoloed={isSoloed}>
-                {isMidi ? "" : index}
-                <div>
-                  <span>{channel.split("/")[0]}</span>
-                  <span>{channel.split("/")[1]}</span>
+              <Channel isMidi={isMidi} isArmed={isArmed} isSoloed={isSoloed} isMuted={isMuted}>
+                <div className="track-id">{index}</div>                
+                <div className="mixer-info">
+                  <span>{channel?.split("/")[0]}</span>
+                  <span>{channel?.split("/")[1]}</span>
                 </div>
               </Channel>
+              <VolumeValue isMidi={isMidi}>
+                {value === "None" ? "" : value}
+              </VolumeValue>
             </Strip>
           );
         }
@@ -399,19 +424,18 @@ const Strip = styled.div`
   height: ${(p) => viewportHeight}vh;
   flex-direction: column;
   width: ${(p) => (p.isMidi ? "110px" : "218px")};
-  background-color: black;
+  background-color: ${p => p.isMuted ? "#303664" : "black" };
   border: 1px solid grey;
   text-align: center;
   position: relative;
   &:after {
-    /* top: ${(p) => (p.isMidi ? "24px" : "38px")}; */
     top: 100%;
     content: "";
     position: absolute;
     width: ${(p) => (p.isMidi ? "110px" : "218px")};
     z-index: 2;
-    height: ${(p) => (p.isMidi ? "calc(100% - 24px)" : "calc(100% - 38px)")};
-    background-color: green;
+    height: ${(p) => (p.isMidi ? "calc(100% - 36px)" : "calc(100% - 36px)")};
+    background-color: ${p => p.isMuted ? "grey" : "#14abe5"}; 
     transform: ${(p) => `translateY(${((p.volume * 100) / 127) * -1}%)`};
   }
 `;
@@ -420,7 +444,7 @@ const TrackName = styled.div`
   background-color: ${(p) => (p.bg && p.assigned ? p.bg : "#696969")};
   color: black;
   font-size: ${(p) => (p.isMidi ? "14px" : "24px")};
-  height: ${(p) => (p.isMidi ? "24px" : "36px")};
+  height: ${(p) => (p.isMidi ? "36px" : "36px")};
   line-height: 1.5em;
   text-shadow: 0 0 12px #ffffff;
   white-space: pre;
@@ -429,19 +453,23 @@ const TrackName = styled.div`
 
 const Channel = styled.div`
   font-family: "Courier New", Courier, monospace;
-  font-size: ${(p) => (p.isMidi ? "18px" : "30px")};
   letter-spacing: 2px;
   z-index: 4;
   margin-top: 2px;
   background: ${(p) => (p.isSoloed ? "#1b37fd" : "none")};
-  color: ${(p) => (p.isArmed ? "red" : "white")};
-  font-weight: ${(p) => (p.isArmed ? "bold" : "normal")};
-  text-shadow: ${(p) => (p.isArmed ? "0 0 16px #e05a5a;" : "0 0 12px #000;")};
-  > div {
+  > div.track-id {
+    font-size: ${(p) => (p.isMidi ? "20px" : "30px")};
+    color: ${(p) => (p.isArmed ? "red" : "white")};
+    font-weight: ${(p) => (p.isArmed ? "bold" : "normal")};
+    text-shadow: ${(p) => (p.isArmed ? "0 0 16px #e05a5a;" : "0 0 12px #000;")};
+    height: 34px;
+
+  }
+  > div.mixer-info {
     display: flex;
     position: absolute;
     bottom: 2px;
-    font-size: 18px;
+    font-size: ${(p) => (p.isMidi ? "15px" : "18px")};
     flex-direction: row;
     padding: 4px;
     justify-content: space-around;
@@ -449,6 +477,7 @@ const Channel = styled.div`
     width: 100%;
     color: white;
     font-weight: bold;
+    /* separator for stereo channels label */
     :after {
       content: "";
       display: ${(p) => (p.isMidi ? "none" : "block")};
@@ -461,12 +490,25 @@ const Channel = styled.div`
   }
 `;
 
+const VolumeValue = styled.div`
+  z-index: 10;
+  position: absolute;
+  width: 100%;
+  height: 30px;
+  background-color: transparent;
+  top: 40%;
+  left: 0;
+  color: white;
+  font-size: ${(p) => (p.isMidi ? "15px" : "18px")};
+  text-shadow: 1px 0px 4px #000000a8;
+`
+
 const KnobsContainer = styled.div`
-  width: 560px;
+  width: 700px;
   height: 100%;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 1fr 0.7fr 1.1fr 1fr;
+  grid-template-columns:  1fr 1fr 1.1fr 1fr;
   grid-template-rows: 0.5fr;
   grid-gap: 2px;
   height: 100px;
