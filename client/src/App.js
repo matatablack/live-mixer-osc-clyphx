@@ -451,7 +451,7 @@ const Strip = styled.div`
 const TrackName = styled.div`
   background-color: ${(p) => (p.bg && p.assigned ? p.bg : "#696969")};
   color: black;
-  font-size: ${(p) => (p.isMidi ? "14px" : "24px")};
+  font-size: ${(p) => (p.isMidi ? "14px" : "18px")};
   height: ${(p) => (p.isMidi ? "36px" : "36px")};
   line-height: 1.5em;
   text-shadow: 0 0 12px #ffffff;
