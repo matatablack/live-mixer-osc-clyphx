@@ -344,7 +344,7 @@ function App() {
                 </div>
               </Channel>
               <VolumeValue isMidi={isMidi}>
-                {value === "None" ? "" : (parseFloat(value).toFixed(1) || '-inf')}
+                {value === "None" ? "" : value.includes('inf') ? '-inf' : parseFloat(value).toFixed(1)}
               </VolumeValue>
             </Strip>
           );
