@@ -344,7 +344,7 @@ function App() {
                 </div>
               </Channel>
               <VolumeValue isMidi={isMidi}>
-                {value === "None" ? "" : value}
+                {value === "None" ? "" : parseFloat(value).toFixed(1)+' dB'}
               </VolumeValue>
             </Strip>
           );
@@ -442,7 +442,7 @@ const Strip = styled.div`
     position: absolute;
     width: ${(p) => (p.isMidi ? "110px" : "218px")};
     z-index: 2;
-    height: ${(p) => (p.isMidi ? "calc(100% - 36px)" : "calc(100% - 36px)")};
+    height: ${(p) => (p.isMidi ? "calc(100% - 32px)" : "calc(100% - 32px)")};
     background-color: ${p => p.isMuted ? "grey" : "#14abe5"}; 
     transform: ${(p) => `translateY(${((p.volume * 100) / 127) * -1}%)`};
   }
@@ -452,7 +452,7 @@ const TrackName = styled.div`
   background-color: ${(p) => (p.bg && p.assigned ? p.bg : "#696969")};
   color: black;
   font-size: ${(p) => (p.isMidi ? "14px" : "18px")};
-  height: ${(p) => (p.isMidi ? "36px" : "36px")};
+  height: ${(p) => (p.isMidi ? "32px" : "32px")};
   line-height: 1.5em;
   text-shadow: 0 0 12px #ffffff;
   white-space: pre;
@@ -466,7 +466,7 @@ const Channel = styled.div`
   margin-top: 2px;
   background: ${(p) => (p.isSoloed ? "#1b37fd" : "none")};
   > div.track-id {
-    font-size: ${(p) => (p.isMidi ? "20px" : "30px")};
+    font-size: ${(p) => (p.isMidi ? "20px" : "22px")};
     color: ${(p) => (p.isArmed ? "red" : "white")};
     font-weight: ${(p) => (p.isArmed ? "bold" : "normal")};
     text-shadow: ${(p) => (p.isArmed ? "0 0 16px #e05a5a;" : "0 0 12px #000;")};
@@ -477,9 +477,9 @@ const Channel = styled.div`
     display: flex;
     position: absolute;
     bottom: 2px;
-    font-size: ${(p) => (p.isMidi ? "15px" : "18px")};
+    font-size: ${(p) => (p.isMidi ? "14px" : "16px")};
     flex-direction: row;
-    padding: 4px;
+    padding: 0 4px;
     justify-content: space-around;
     z-index: 0;
     width: 100%;
@@ -509,10 +509,10 @@ const VolumeValue = styled.div`
   width: 100%;
   height: 30px;
   background-color: transparent;
-  top: 40%;
+  top: 62%;
   left: 0;
   color: white;
-  font-size: ${(p) => (p.isMidi ? "15px" : "18px")};
+  font-size: ${(p) => (p.isMidi ? "13px" : "13px")};
   text-shadow: 1px 0px 4px #000000a8;
 `
 
