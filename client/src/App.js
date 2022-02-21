@@ -220,6 +220,7 @@ const knobsInitialState = {
 const armedTracksByFader = {};
 const soloTracksByFader = {};
 const mutedTracksByFader = {};
+const monoTracksByFader = {};
 
 let lastStatusMessage = "";
 
@@ -269,6 +270,11 @@ function App() {
         mutedTracksByFader["FADER_" + control?.split("lp_track_mute_")[1]] = value === "True" ? true : false;
       }
 
+      // MONO UTILITY
+      if (type === "value" &&  control?.includes("lp_track_mono_util_")) {
+        monoTracksByFader["FADER_" + control?.split("lp_track_mono_util_")[1]] = value === "On" ? true : false;
+      }
+
       // FADER
       if (faders[control]) {
         setFaders((faders) => ({
@@ -298,12 +304,13 @@ function App() {
     };
   }, []);
 
-/*   useEffect(() => {
+  /* useEffect(() => {
     const x = setInterval(() => {
-      console.log('mutedTracksByFader', mutedTracksByFader)
-      console.log('armedTracksByFader', armedTracksByFader)
-      console.log('solo', soloTracksByFader)
-    }, 3000)
+      // console.log('mutedTracksByFader', mutedTracksByFader)
+      // console.log('armedTracksByFader', armedTracksByFader)
+      // console.log('solo', soloTracksByFader)
+      console.log('mono', monoTracksByFader)
+    }, 5000)
     return () => clearInterval(x)
   }, []) */
 
@@ -323,12 +330,13 @@ function App() {
           const isArmed = armedTracksByFader[control];
           const isSoloed = soloTracksByFader[control];
           const isMuted = mutedTracksByFader[control];
+          const isMono = monoTracksByFader[control];
           return (
             <Strip key={channel} isMidi={isMidi} volume={int} isMuted={isMuted}>
               <TrackName assigned={isAssigned} isMidi={isMidi} bg={trackColor}>
                 {track_name?.split("[->")[0]}
               </TrackName>
-              <Channel isMidi={isMidi} isArmed={isArmed} isSoloed={isSoloed} isMuted={isMuted}>
+              <Channel isMidi={isMidi} isArmed={isArmed} isSoloed={isSoloed} isMuted={isMuted} isMono={isMono}>
                 <div className="track-id">{index}</div>                
                 <div className="mixer-info">
                   <span>{channel?.split("/")[0]}</span>
@@ -477,6 +485,11 @@ const Channel = styled.div`
     width: 100%;
     color: white;
     font-weight: bold;
+    > span:nth-child(1) {
+      background-color: ${p => p.isMono ? 'red' : 'transparent'};
+      border-radius: 2px;
+      padding: 0 2px;
+    }
     /* separator for stereo channels label */
     :after {
       content: "";
